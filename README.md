@@ -5,27 +5,17 @@ Views Enhanced Table provides an enhanced **Table** style plugin for Backdrop Vi
 It keeps the core table output and options, but adds a more convenient configuration UI and several additional display controls.
 
 ## Features
+In the stock Views Table style, the fields (columns) are always rendered in the order in which they are defined at `Fields|Rearrange`. This module aloows the user to reorder the rendering-only order, independent of the query order.
 
-### Columns
+All of the stock Table styling options are available (some in a more intuitive UI), with the following additions:
+
 - **Presentation-only column ordering** (left/right controls).
-- **Combine columns** (“Merge left”) so multiple fields render under one table header.
-  - Supports **separator text** between merged fields (HTML allowed; e.g. `<br>` to stack values).
-- **Per-column alignment** (applies to header + cells).
 - **Per-column width** (CSS width value; validated).
-- **Hide if empty** per column.
-
-### Click-sorting
-- Enable click-sorting for sortable fields.
-- Choose **default** click-sort field and initial order.
-
-### Styling
-- Optional **row striping** (core table option).
 - Optional borders:
   - **Horizontal row borders**
   - **Vertical column borders**
   - **Outer table frame**
-  - Thickness and color controls.
-- Optional “Add views row classes” (e.g. `views-row-1`).
+    - Thickness and color controls.
 
 ### Organization
 - Style options are grouped into fieldsets:
@@ -75,10 +65,16 @@ Before disabling/uninstalling, switch affected displays back to the core **Table
 - Please report bugs and feature requests in the project's issue queue.
 - Include Backdrop core version, PHP version, and steps to reproduce.
 
-## Maintainers
+## Current Maintainers
 
-- Eric Foy (project maintainer)
+- [ericfoy](https://github.com/ericfoy)
+
+## Credits
+
+- This module was created for Backdrop by [ericfoy](https://github.com/ericfoy)
+- Sponsored by [Perideo LLC](https://perideo.com).
 
 ## License
 
-GPL-2.0-or-later (same terms as Backdrop CMS).
+This project is GPL v2 software. See the LICENSE.txt file in this directory for complete text.
+
