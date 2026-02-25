@@ -5,7 +5,7 @@
 It keeps the core table output and options, but adds a more convenient configuration UI and several additional display controls.
 
 ## Features
-In the stock Views Table style, the fields (columns) are always rendered in the order in which they are defined at `Fields|Rearrange`. This module aloows the user to reorder the rendering-only order, independent of the query order.
+In the stock Views Table style, the fields (columns) are always rendered in the order in which they are defined at `Fields|Rearrange`. This module allows the user to reorder the rendering-only order, independent of the query order.
 
 All of the stock Table styling options are available (some in a more intuitive UI), with the following additions:
 
