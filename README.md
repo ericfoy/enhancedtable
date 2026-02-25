@@ -10,12 +10,12 @@ In the stock Views Table style, the fields (columns) are always rendered in the 
 All of the stock Table styling options are available (some in a more intuitive UI), with the following additions:
 
 - **Presentation-only column ordering** (left/right controls).
+- **Inline titles for merged fields** (optional label prefix; respects the field’s “use colon after label” setting).
 - **Per-column width** (CSS width value; validated).
-- Optional borders:
+- Optional borders with thickness and color controls:
   - **Horizontal row borders**
   - **Vertical column borders**
   - **Outer table frame**
-    - Thickness and color controls.
 
 ### Organization
 - Style options are grouped into fieldsets:

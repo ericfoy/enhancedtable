@@ -6,6 +6,17 @@
 class enhancedtable_plugin_style_table extends views_plugin_style_table {
 
   /**
+   * Whether inline-title prefixes have already been applied to rendered fields.
+   *
+   * Views may call render_fields() multiple times during a single build.
+   * Since Views caches rendered output in $this->rendered_fields, we must
+   * ensure we only prefix once to avoid duplicate titles.
+   *
+   * @var bool
+   */
+  protected $enhancedtable_inline_titles_applied = FALSE;
+
+  /**
    * Inherit the standard table options.
    */
   public function option_definition() {
@@ -20,6 +31,13 @@ class enhancedtable_plugin_style_table extends views_plugin_style_table {
     // Presentation-only "merge into the column to the left" flags.
     // Keyed by field ID.
     $options['merge_left'] = array(
+      'default' => array(),
+    );
+
+    // Presentation-only: when a field is merged into the column to its left,
+    // optionally prefix that field's output with its label ("Inline title").
+    // Keyed by field ID.
+    $options['inline_title'] = array(
       'default' => array(),
     );
 
@@ -61,6 +79,129 @@ class enhancedtable_plugin_style_table extends views_plugin_style_table {
     );
     return $options;
   }
+
+  /**
+   * Determine if a rendered field output should be treated as empty.
+   *
+   * @param mixed $value
+   *   A rendered field value (usually a string, but may be an array).
+   *
+   * @return bool
+   *   TRUE if the output is effectively empty.
+   */
+  protected function enhancedtable_is_effectively_empty($value) {
+    // Preserve numeric zero.
+    if ($value === 0 || $value === '0') {
+      return FALSE;
+    }
+
+    if (is_array($value)) {
+      $value = implode('', $value);
+    }
+
+    $value = (string) $value;
+    // Treat markup-only whitespace as empty.
+    $stripped = trim(strip_tags($value));
+    return ($stripped === '');
+  }
+
+  public function render_fields($result) {
+    // Render fields via Views core first.
+    $rendered = parent::render_fields($result);
+
+    // If we've already applied prefixes, return the cached/rendered output.
+    if (!empty($this->enhancedtable_inline_titles_applied)) {
+      return $rendered;
+    }
+
+    if (empty($rendered) || !is_array($rendered)) {
+      return $rendered;
+    }
+
+    $inline = (!empty($this->options['inline_title']) && is_array($this->options['inline_title']))
+      ? $this->options['inline_title']
+      : array();
+    if (empty($inline)) {
+      return $rendered;
+    }
+
+    $merge_left = (!empty($this->options['merge_left']) && is_array($this->options['merge_left']))
+      ? $this->options['merge_left']
+      : array();
+
+    if (empty($this->view) || empty($this->view->field) || !is_array($this->view->field)) {
+      return $rendered;
+    }
+
+    // Walk fields left-to-right to determine merge groups.
+    $root = NULL;
+    foreach (array_keys($this->view->field) as $fid) {
+      $want_merge = !empty($merge_left[$fid]);
+      if (!$want_merge || !$root) {
+        $root = $fid;
+        continue;
+      }
+
+      if (empty($inline[$fid])) {
+        continue;
+      }
+
+      $handler = isset($this->view->field[$fid]) ? $this->view->field[$fid] : NULL;
+      if (!$handler) {
+        continue;
+      }
+
+      // Use the field label as configured in the Views field settings.
+      $label = '';
+      if (method_exists($handler, 'label')) {
+        $label = $handler->label();
+      }
+      elseif (!empty($handler->options['label'])) {
+        $label = $handler->options['label'];
+      }
+      if ($label === '') {
+        continue;
+      }
+
+      // Borrow punctuation from core Views field setting: "use colon after
+      // label" (element_label_colon).
+      $use_colon = TRUE;
+      if (isset($handler->options) && is_array($handler->options) && array_key_exists('element_label_colon', $handler->options)) {
+        $use_colon = !empty($handler->options['element_label_colon']);
+      }
+
+      $prefix = '<span class="enhancedtable-inline-title">' . check_plain($label) . '</span>';
+      if ($use_colon) {
+        $prefix .= '<span class="enhancedtable-inline-title-punct">:</span> ';
+      }
+      else {
+        $prefix .= ' ';
+      }
+
+      foreach ($rendered as $row_index => &$row_fields) {
+        if (!is_array($row_fields) || !array_key_exists($fid, $row_fields)) {
+          continue;
+        }
+
+        // Avoid emitting a dangling label if the value is empty.
+        if ($this->enhancedtable_is_effectively_empty($row_fields[$fid])) {
+          continue;
+        }
+
+        $row_fields[$fid] = $prefix . $row_fields[$fid];
+      }
+      unset($row_fields);
+    }
+
+    // Keep Views' internal cache in sync.
+    $this->rendered_fields = $rendered;
+
+    // Mark as applied so subsequent render_fields() calls don't double-prefix.
+    $this->enhancedtable_inline_titles_applied = TRUE;
+
+    return $rendered;
+  }
+
 
   /**
    * Apply EnhancedTable presentation order before rendering.
@@ -601,6 +742,27 @@ class enhancedtable_plugin_style_table extends views_plugin_style_table {
             ':input[name="style_options[merge_left][' . $fid . ']"]' => array('checked' => TRUE),
           ),
           // Ensure non-merged fields do not submit separator values.
+          'disabled' => array(
+            ':input[name="style_options[merge_left][' . $fid . ']"]' => array('checked' => FALSE),
+          ),
+        ),
+      );
+
+      // Inline title (prefix the merged field output with its label).
+      // Visibility mirrors the Separator control (shown only when merged),
+      // but unlike the Separator, this remains visible for all merged children.
+      $inline_default = !empty($this->options['inline_title'][$fid]) ? 1 : 0;
+      $form['bt_layout']['cards'][$fid]['inline_title'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Inline title'),
+        '#default_value' => $inline_default,
+        '#parents' => array('style_options', 'inline_title', $fid),
+        '#attributes' => array('class' => array('bt-inline-title')),
+      //'#description' => t('Prefix this merged field with its field label.'),
+        '#states' => array(
+          'visible' => array(
+            ':input[name="style_options[merge_left][' . $fid . ']"]' => array('checked' => TRUE),
+          ),
           'disabled' => array(
             ':input[name="style_options[merge_left][' . $fid . ']"]' => array('checked' => FALSE),
           ),

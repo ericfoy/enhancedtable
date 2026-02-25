@@ -98,6 +98,15 @@
   font-weight: bold;
 }
 
+#backdrop-modal .bt-help-text-body { 
+    display:block;
+    width:80%; 
+    line-height: 1;
+  background: #efefd0;
+  padding: 1rem 5rem 1rem 3rem;
+  border-radius: 10px;
+}
+
 /* Force-hide separator controls on cards where separators are not allowed.
    Use !important so it remains hidden even if Backdrop/states.js toggles it. */
 #backdrop-modal .bt-sep-hidden {
