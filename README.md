@@ -34,7 +34,7 @@ The easiest way to install the module on an existing Backdrop CMS site is to nav
 1. Edit a View.
 2. In the display’s **Format** section, choose:
    - **Show:** Table
-   - **Style plugin:** **Enhanced table**
+   - **Style plugin:** **Table (enhanced)**
 3. Click **Settings** next to the style plugin.
 4. Use the **Columns** fieldset to reorder, merge, set separators, alignment, widths, and click-sorting.
 5. Use **Styling** for borders/striping and row-class options.
