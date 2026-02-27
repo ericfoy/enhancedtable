@@ -41,17 +41,15 @@ The easiest way to install the module on an existing Backdrop CMS site is to nav
 
 ## Configuration storage
 
-Views Enhanced Table does not create its own module-level configuration object.
+Enhanced Table does not create a separate, module-level configuration object (with the exception noted below).
 
-All settings are stored **per display** inside the View’s configuration (the display’s `style_plugin` and `style_options`).
+All settings are stored per View display, inside the View’s configuration (`display_options`), primarily in `style_plugin` and `style_options`.
 
 ## Disabling / uninstalling
 
-If a View display is configured with the **Enhanced table** style plugin and the module is disabled, Views cannot load the missing plugin and that display may render no output.
+Enhanced Table includes a safety mechanism: when the module is **disabled**, it automatically switches any displays using the Enhanced Table style back to the core **Table** style so the View continues to render (albit, with some styling no longer working), and it will create a module-level configuration object for storage of a list of views formerly using its styles. When the module is **re-enabled**, it will attempt to restore those displays to Enhanced Table (best effort).
 
-Before disabling/uninstalling, switch affected displays back to the core **Table** style plugin.
-
-(Planned improvement: an admin utility to audit/convert displays that use EnhancedTable.)
+If you plan to uninstall the module permanently, verify affected Views are using the core **Table** style before uninstalling.
 
 ## Notes
 
