@@ -65,12 +65,14 @@ function enhancedtable_build_table_css(array $options, $table_selector) {
       }
 
       // Views table cells are "views-field-FIELDNAME".
+      // Scope ONLY to the direct header/body cells of this table, so nested
+      // subview tables are not affected.
       $field_class = backdrop_clean_css_identifier($field);
 
       $selector = $table_selector
-        . ' th.views-field-' . $field_class . ', '
+        . ' > thead > tr > th.views-field-' . $field_class . ', '
         . $table_selector
-        . ' td.views-field-' . $field_class;
+        . ' > tbody > tr > td.views-field-' . $field_class;
 
       $css .= $selector . " { width: {$width}; }\n";
     }
@@ -103,9 +105,9 @@ function enhancedtable_build_table_css(array $options, $table_selector) {
 
       $field_class = backdrop_clean_css_identifier($field);
       $selector = $table_selector
-        . ' th.views-field-' . $field_class . ', '
+        . ' > thead > tr > th.views-field-' . $field_class . ', '
         . $table_selector
-        . ' td.views-field-' . $field_class;
+        . ' > tbody > tr > td.views-field-' . $field_class;
 
       $css .= $selector . " { text-align: {$text_align}; }\n";
     }
@@ -135,7 +137,7 @@ function enhancedtable_build_table_css(array $options, $table_selector) {
     $border = $thk . ' solid ' . $color;
 
     $css .= $table_selector
-      . " tbody tr + tr td { border-top: {$border}; }\n";
+      . " > tbody > tr + tr > td { border-top: {$border}; }\n";
   }
 
   // -------------------------------------------------------------------
@@ -159,9 +161,9 @@ function enhancedtable_build_table_css(array $options, $table_selector) {
     $border = $thk . ' solid ' . $color;
 
     $css .= $table_selector
-      . " thead th + th, "
+      . " > thead > tr > th + th, "
       . $table_selector
-      . " tbody td + td { border-left: {$border}; }\n";
+      . " > tbody > tr > td + td { border-left: {$border}; }\n";
   }
 
   // -------------------------------------------------------------------
