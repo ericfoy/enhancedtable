@@ -306,7 +306,7 @@
           refreshCardUIState();
         });
 
-        $cards.on('click', '.bt-move-left', function (e) {
+        $cards.off('click.enhancedtableMoveLeft').on('click.enhancedtableMoveLeft', '.bt-move-left', function (e) {
           e.preventDefault();
           var $card = $(this).closest('.bt-card');
           var $prev = $card.prev('.bt-card');
@@ -317,7 +317,7 @@
           }
         });
 
-        $cards.on('click', '.bt-move-right', function (e) {
+        $cards.off('click.enhancedtableMoveRight').on('click.enhancedtableMoveRight', '.bt-move-right', function (e) {
           e.preventDefault();
           var $card = $(this).closest('.bt-card');
           var $next = $card.next('.bt-card');
