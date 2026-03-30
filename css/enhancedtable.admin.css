@@ -6,11 +6,6 @@
 #backdrop-modal .bt-cards .form-item {
     margin: 0;
 }
-#backdrop-modal  .bt-cards-wrap {
-  display: flex;
-  justify-content: center;
-}
-
 /* Reset field order control (above the cards). */
 #backdrop-modal .bt-reset-order {
   display: block;
@@ -25,6 +20,11 @@
 #backdrop-modal .bt-reset-order .description {
   margin-top: 0.25rem;
 }
+/*
+#backdrop-modal  .bt-cards-wrap {
+  display: flex;
+  justify-content: center;
+}
 
 #backdrop-modal .bt-cards {
   display: flex;
@@ -32,6 +32,23 @@
   align-items: flex-start;
   justify-content: flex-end;
   gap: 1;
+}
+*/
+#backdrop-modal .bt-cards-wrap {
+  display: block;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  padding-bottom: 0.25rem;
+}
+
+#backdrop-modal .bt-cards {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  min-width: max-content;
 }
 
 #backdrop-modal .bt-card {
