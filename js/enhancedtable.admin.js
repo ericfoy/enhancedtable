@@ -8,6 +8,26 @@
       // ---- EnhancedTable cards: left/right "kick" ordering ----
       $context.find('.bt-cards').once('enhancedtable-cards').each(function () {
         var $cards = $(this);
+        var btReorderBusy = false;
+
+        function setReorderBusy(state) {
+          btReorderBusy = state;
+
+          // Temporarily suppress further move clicks while the reorder cycle finishes.
+          $cards.find('.bt-move-left, .bt-move-right').prop('disabled', state);
+        }
+
+        function releaseReorderBusySoon(delay) {
+          var old = $cards.data('btReorderBusyTimer');
+          if (old) {
+            window.clearTimeout(old);
+          }
+
+          $cards.data('btReorderBusyTimer', window.setTimeout(function () {
+            setReorderBusy(false);
+            refreshCardUIState();
+          }, delay));
+        }
 
         // Respect users who prefer reduced motion.
         var prefersReducedMotion = false;
@@ -37,17 +57,23 @@
 
         // Animate reordering using a lightweight FLIP technique so the move is visible.
         function animateReorder(doMoveFn, $movedCard, direction) {
+          if (btReorderBusy) {
+            return;
+          }
+
+          setReorderBusy(true);
+
           if (prefersReducedMotion) {
             doMoveFn();
             refreshCardUIState();
             flashMoved($movedCard, direction);
+            setReorderBusy(false);
             return;
           }
 
           var $before = $cards.children('.bt-card');
           var firstRects = [];
           $before.each(function () {
-            // Cache by element reference.
             firstRects.push({ el: this, rect: this.getBoundingClientRect() });
           });
 
@@ -66,7 +92,6 @@
             return null;
           }
 
-          // Invert.
           $after.each(function () {
             var first = findFirstRect(this);
             if (!first) {
@@ -76,7 +101,6 @@
             var dx = first.left - last.left;
             var dy = first.top - last.top;
 
-            // Only animate elements whose position changed.
             if (dx || dy) {
               moved.push({ el: this });
               this.style.transition = 'none';
@@ -85,8 +109,7 @@
             }
           });
 
-          // Force a reflow so the browser applies the inverted transform.
-          // eslint-disable-next-line no-unused-expressions
+          // Force reflow.
           $cards[0] && $cards[0].offsetHeight;
 
           (window.requestAnimationFrame || window.setTimeout)(function () {
@@ -95,7 +118,6 @@
               el.style.transition = 'transform 360ms ease';
               el.style.transform = '';
 
-              // Clean up after the transition.
               (function (node) {
                 var old = $(node).data('btFlipTimer');
                 if (old) {
@@ -110,14 +132,23 @@
             }
 
             flashMoved($movedCard, direction);
+
+            // Release after the transition window has safely passed.
+            releaseReorderBusySoon(460);
           }, 0);
         }
-
         // FLIP animation for reordering many cards at once (e.g. reset).
         function animateReorderAll(doMoveFn) {
+          if (btReorderBusy) {
+            return;
+          }
+
+          setReorderBusy(true);
+
           if (prefersReducedMotion) {
             doMoveFn();
             refreshCardUIState();
+            setReorderBusy(false);
             return;
           }
 
@@ -158,8 +189,6 @@
             }
           });
 
-          // Force a reflow so the browser applies the inverted transform.
-          // eslint-disable-next-line no-unused-expressions
           $cards[0] && $cards[0].offsetHeight;
 
           (window.requestAnimationFrame || window.setTimeout)(function () {
@@ -180,6 +209,8 @@
                 }, 500));
               })(el);
             }
+
+            releaseReorderBusySoon(520);
           }, 0);
         }
 
@@ -306,30 +337,53 @@
           refreshCardUIState();
         });
 
-        $cards.off('click.enhancedtableMoveLeft').on('click.enhancedtableMoveLeft', '.bt-move-left', function (e) {
-          e.preventDefault();
-          var $card = $(this).closest('.bt-card');
-          var $prev = $card.prev('.bt-card');
-          if ($prev.length) {
-            console.log('move-left fired for', $card.attr('data-bt-field'));
-            animateReorder(function () {
-              $card.insertBefore($prev);
-            }, $card, 'left');
-          }
-        });
+        $cards
+          .off('click.enhancedtableMoveLeft', '.bt-move-left')
+          .on('click.enhancedtableMoveLeft', '.bt-move-left', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
 
-        $cards.off('click.enhancedtableMoveRight').on('click.enhancedtableMoveRight', '.bt-move-right', function (e) {
-          e.preventDefault();
-          var $card = $(this).closest('.bt-card');
-          var $next = $card.next('.bt-card');
-          if ($next.length) {
-            console.log('move-right fired for', $card.attr('data-bt-field'));
-            animateReorder(function () {
-              $card.insertAfter($next);
-            }, $card, 'right');
-          }
-        });
+            if (btReorderBusy) {
+              return false;
+            }
 
+            var $card = $(this).closest('.bt-card');
+            var $prev = $card.prev('.bt-card');
+
+            if ($prev.length) {
+              console.log('move-left fired for', $card.attr('data-bt-field'));
+              animateReorder(function () {
+                $card.insertBefore($prev);
+              }, $card, 'left');
+            }
+
+            return false;
+          });
+
+        $cards
+          .off('click.enhancedtableMoveRight', '.bt-move-right')
+          .on('click.enhancedtableMoveRight', '.bt-move-right', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+
+            if (btReorderBusy) {
+              return false;
+            }
+
+            var $card = $(this).closest('.bt-card');
+            var $next = $card.next('.bt-card');
+
+            if ($next.length) {
+              console.log('move-right fired for', $card.attr('data-bt-field'));
+              animateReorder(function () {
+                $card.insertAfter($next);
+              }, $card, 'right');
+            }
+
+            return false;
+          });
         // Reset to query order (Views "Fields | Rearrange").
         var $resetBtn = $cards.closest('#backdrop-modal').find('button.bt-reset-field-order').once('bt-reset-field-order');
         $resetBtn.on('click', function (e) {
