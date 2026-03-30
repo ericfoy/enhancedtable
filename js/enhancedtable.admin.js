@@ -311,6 +311,7 @@
           var $card = $(this).closest('.bt-card');
           var $prev = $card.prev('.bt-card');
           if ($prev.length) {
+            console.log('move-left fired for', $card.attr('data-bt-field'));
             animateReorder(function () {
               $card.insertBefore($prev);
             }, $card, 'left');
@@ -322,6 +323,7 @@
           var $card = $(this).closest('.bt-card');
           var $next = $card.next('.bt-card');
           if ($next.length) {
+            console.log('move-right fired for', $card.attr('data-bt-field'));
             animateReorder(function () {
               $card.insertAfter($next);
             }, $card, 'right');
