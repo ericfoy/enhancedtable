@@ -47,6 +47,12 @@ function enhancedtable_get_root_table_selector($view) {
 function enhancedtable_build_table_css(array $options, $table_selector) {
   $css = '';
 
+  // Whenever any border style is enabled, force collapsed borders so cell borders
+  // render consistently in both normal tables and subview tables.
+  if (!empty($options['row_borders']) || !empty($options['column_borders']) || !empty($options['frame_border'])) {
+    $css .= $table_selector . " { border-collapse: collapse; border-spacing: 0; }\n";
+  }
+
   // -------------------------------------------------------------------
   // Column widths: style_options[column_widths][FIELD] => CSS width.
   // -------------------------------------------------------------------
@@ -187,7 +193,8 @@ function enhancedtable_build_table_css(array $options, $table_selector) {
     $border = $thk . ' solid ' . $color;
 
     $css .= $table_selector
-      . " { border: {$border}; border-collapse: collapse; }\n";
+      . " { border: {$border}; }\n";
+      
   }
 
   return $css;
