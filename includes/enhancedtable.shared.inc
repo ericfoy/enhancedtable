@@ -38,11 +38,13 @@ function enhancedtable_get_root_table_selectors($view) {
     // Plain Views table directly under .view-content.
     $base . ' > table.views-table',
 
-    // Some form-enabled Views render the table directly under the <form>.
+    // Form-enabled Views that retain the form wrapper.
     $base . ' > .views-form > form > table.views-table',
-
-    // Other form-enabled Views wrap hidden inputs and the table in an extra div.
     $base . ' > .views-form > form > div > table.views-table',
+
+    // Embedded/nested form Views can lose the <form> wrapper in the final DOM
+    // because nested forms are invalid HTML and the browser normalizes them.
+    $base . ' > .views-form > div > table.views-table',
   );
 }
 
