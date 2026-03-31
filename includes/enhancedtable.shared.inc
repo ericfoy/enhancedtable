@@ -35,8 +35,14 @@ function enhancedtable_get_root_table_selectors($view) {
   $base = enhancedtable_get_view_selector($view) . ' > .view-content';
 
   return array(
+    // Plain Views table directly under .view-content.
     $base . ' > table.views-table',
+
+    // Some form-enabled Views render the table directly under the <form>.
     $base . ' > .views-form > form > table.views-table',
+
+    // Other form-enabled Views wrap hidden inputs and the table in an extra div.
+    $base . ' > .views-form > form > div > table.views-table',
   );
 }
 
