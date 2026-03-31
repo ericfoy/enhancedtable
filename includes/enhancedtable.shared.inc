@@ -17,20 +17,40 @@ function enhancedtable_get_view_selector($view) {
 }
 
 /**
- * Selector for ONLY this display's own root table.
+ * Selectors for ONLY this display's own root table.
  *
- * This intentionally scopes to the direct child table of this view display's
- * .view-content wrapper. This prevents EnhancedTable CSS from affecting any
- * nested/embedded subview tables that might be rendered inside a parent row.
+ * This intentionally scopes to the direct root table of this view display.
+ * Some Views displays render the table directly under .view-content, while
+ * form-enabled displays render it under .view-content > .views-form > form.
+ * Both paths are valid roots for this display and neither should affect any
+ * nested/embedded subview tables rendered inside a parent row.
+ *
+ * @param object $view
+ *   The Views object.
+ *
+ * @return array
+ *   CSS selectors for the root table of this view display.
+ */
+function enhancedtable_get_root_table_selectors($view) {
+  $base = enhancedtable_get_view_selector($view) . ' > .view-content';
+
+  return array(
+    $base . ' > table.views-table',
+    $base . ' > .views-form > form > table.views-table',
+  );
+}
+
+/**
+ * Selector string for this display's own root table(s).
  *
  * @param object $view
  *   The Views object.
  *
  * @return string
- *   CSS selector for the root table of this view display.
+ *   Comma-separated CSS selectors for the root table(s) of this view display.
  */
 function enhancedtable_get_root_table_selector($view) {
-  return enhancedtable_get_view_selector($view) . ' > .view-content > table.views-table';
+  return implode(', ', enhancedtable_get_root_table_selectors($view));
 }
 
 /**
@@ -46,11 +66,27 @@ function enhancedtable_get_root_table_selector($view) {
  */
 function enhancedtable_build_table_css(array $options, $table_selector) {
   $css = '';
+  $table_selectors = preg_split('/\s*,\s*/', (string) $table_selector);
+  $table_selectors = array_values(array_filter(array_map('trim', $table_selectors)));
+
+  $build_selector = function (array $suffixes) use ($table_selectors) {
+    $parts = array();
+
+    foreach ($table_selectors as $root) {
+      foreach ($suffixes as $suffix) {
+        $parts[] = $root . $suffix;
+      }
+    }
+
+    return implode(', ', $parts);
+  };
 
   // Whenever any border style is enabled, force collapsed borders so cell borders
   // render consistently in both normal tables and subview tables.
   if (!empty($options['row_borders']) || !empty($options['column_borders']) || !empty($options['frame_border'])) {
-    $css .= $table_selector . " { border-collapse: collapse; border-spacing: 0; }\n";
+    $css .= $build_selector(array(
+      '',
+    )) . " { border-collapse: collapse; border-spacing: 0; }\n";
   }
 
   // -------------------------------------------------------------------
@@ -75,10 +111,10 @@ function enhancedtable_build_table_css(array $options, $table_selector) {
       // subview tables are not affected.
       $field_class = backdrop_clean_css_identifier($field);
 
-      $selector = $table_selector
-        . ' > thead > tr > th.views-field-' . $field_class . ', '
-        . $table_selector
-        . ' > tbody > tr > td.views-field-' . $field_class;
+      $selector = $build_selector(array(
+        ' > thead > tr > th.views-field-' . $field_class,
+        ' > tbody > tr > td.views-field-' . $field_class,
+      ));
 
       $css .= $selector . " { width: {$width}; }\n";
     }
@@ -110,10 +146,10 @@ function enhancedtable_build_table_css(array $options, $table_selector) {
       }
 
       $field_class = backdrop_clean_css_identifier($field);
-      $selector = $table_selector
-        . ' > thead > tr > th.views-field-' . $field_class . ', '
-        . $table_selector
-        . ' > tbody > tr > td.views-field-' . $field_class;
+      $selector = $build_selector(array(
+        ' > thead > tr > th.views-field-' . $field_class,
+        ' > tbody > tr > td.views-field-' . $field_class,
+      ));
 
       $css .= $selector . " { text-align: {$text_align}; }\n";
     }
@@ -142,8 +178,9 @@ function enhancedtable_build_table_css(array $options, $table_selector) {
 
     $border = $thk . ' solid ' . $color;
 
-    $css .= $table_selector
-      . " > tbody > tr + tr > td { border-top: {$border}; }\n";
+    $css .= $build_selector(array(
+      ' > tbody > tr + tr > td',
+    )) . " { border-top: {$border}; }\n";
   }
 
   // -------------------------------------------------------------------
@@ -166,10 +203,10 @@ function enhancedtable_build_table_css(array $options, $table_selector) {
 
     $border = $thk . ' solid ' . $color;
 
-    $css .= $table_selector
-      . " > thead > tr > th + th, "
-      . $table_selector
-      . " > tbody > tr > td + td { border-left: {$border}; }\n";
+    $css .= $build_selector(array(
+      ' > thead > tr > th + th',
+      ' > tbody > tr > td + td',
+    )) . " { border-left: {$border}; }\n";
   }
 
   // -------------------------------------------------------------------
@@ -192,8 +229,9 @@ function enhancedtable_build_table_css(array $options, $table_selector) {
 
     $border = $thk . ' solid ' . $color;
 
-    $css .= $table_selector
-      . " { border: {$border}; }\n";
+    $css .= $build_selector(array(
+      '',
+    )) . " { border: {$border}; }\n";
       
   }
 
